@@ -1,0 +1,105 @@
+.App {
+    background-color: #d3d3d3; // ნაცრისფერი ფონი
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+
+    .navbar {
+        background-color: #001f3f; // მუქი ლურჯი ფონი
+        width: 100%;
+        padding: 0.5rem; // პატარა ეკრანებისთვის ნაკლები padding
+        display: flex;
+        align-items: center;
+        justify-content: flex-start; // მარცხნივ გასწორება
+        color: white;
+        font-size: 1rem; // პატარა ეკრანებისთვის პატარა ტექსტი
+        letter-spacing: 0.3rem;
+        position: relative; // პოზიციონირების დასაყრდენი
+
+        .logo {
+            height: 30px; // პატარა ეკრანებისთვის ლოგოს ზომის შემცირება
+            margin-right: 0.5rem;
+            padding: 0.5em;
+        }
+
+        h1 {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+            font-size: 1rem; // პატარა ეკრანებისთვის ტექსტის ზომის შემცირება
+        }
+    }
+
+    .content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+
+        .button {
+            background-color: #32cd32; // ღია მწვანე ფონი
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem; // პატარა ეკრანებისთვის ნაკლები padding
+            font-size: 1rem; // პატარა ეკრანებისთვის ტექსტის ზომის შემცირება
+            cursor: pointer;
+            border-radius: 5px;
+            letter-spacing: 0.3rem;
+
+            &:hover {
+                background-color: #28a745; // ოდნავ მუქი მწვანე
+            }
+        }
+    }
+
+    .footer {
+        background-color: #28a745; // მწვანე ფონი
+        width: 100%;
+        padding: 0.5rem; // პატარა ეკრანებისთვის ნაკლები padding
+        text-align: center;
+        color: white;
+        font-size: 0.8rem; // პატარა ეკრანებისთვის ტექსტის ზომის შემცირება
+    }
+
+    // Responsive სტილები
+    @media (min-width: 480px) {
+        .navbar {
+            font-size: 1.2rem; // საშუალო ეკრანებისთვის ტექსტის ზომის გაზრდა
+            padding: 1rem;
+        }
+
+        .content {
+            .button {
+                font-size: 1.2rem; // საშუალო ეკრანებისთვის ტექსტის ზომის გაზრდა
+                padding: 1rem 2rem;
+            }
+        }
+
+        .footer {
+            font-size: 1rem; // საშუალო ეკრანებისთვის ტექსტის ზომის გაზრდა
+        }
+    }
+
+    @media (min-width: 768px) {
+        .navbar {
+            font-size: 1.5rem; // დიდი ეკრანებისთვის ტექსტის ზომის გაზრდა
+            letter-spacing: 0.5rem;
+        }
+
+        .content {
+            .button {
+                font-size: 1.5rem; // დიდი ეკრანებისთვის ტექსტის ზომის გაზრდა
+                padding: 1.5rem 3rem;
+            }
+        }
+
+        .footer {
+            font-size: 1.2rem; // დიდი ეკრანებისთვის ტექსტის ზომის გაზრდა
+        }
+    }
+}

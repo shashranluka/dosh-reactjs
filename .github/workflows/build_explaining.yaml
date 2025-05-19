@@ -1,0 +1,141 @@
+# ამ workflow-ს სახელია "Deploy dosh-reactjs to Hetzner" - აღწერს პროცესს, რომელიც დეპლოის აკეთებს Hetzნერ სერვერზე
+name: Deploy dosh-reactjs to Hetzner
+
+# განსაზღვრავს როდის უნდა გაეშვას workflow - ამ შემთხვევაში, როცა მოხდება push main ბრანჩზე
+on:
+  push:
+    branches: [ main ]
+
+# jobs არის დავალებების ჯგუფი, რომელიც უნდა შესრულდეს
+jobs:
+  # BPD არის job-ის სახელი (სავარაუდოდ Build-Package-Deploy აბრევიატურა)
+  BPD:
+    # განსაზღვრავს რომელ სისტემაზე გაეშვას job - ამ შემთხვევაში Ubuntu 24.04-ზე
+    runs-on: ubuntu-24.04
+  
+    # env სექცია ქმნის გარემოს ცვლადებს, რომლებიც ხელმისაწვდომი იქნება job-ის ყველა step-ისთვის
+    env:
+      # DOCKER_IMAGE ცვლადი შეიცავს იმიჯის სახელს და ტეგს (ბრანჩის სახელი:კომიტის SHA)
+      DOCKER_IMAGE: "${{ github.ref_name }}:${{ github.sha }}"
+      # DOCKER_IMAGE_TAR ცვლადი განსაზღვრავს შენახული Docker იმიჯის tar ფაილის სახელს
+      DOCKER_IMAGE_TAR: "${{ github.ref_name }}.tar"
+
+    # steps არის ნაბიჯების სერია, რომლებიც თანმიმდევრობით სრულდება
+    steps:
+    # აყენებს QEMU ემულატორს, რაც საშუალებას იძლევა სხვადასხვა არქიტექტურისთვის ააგოთ Docker იმიჯები
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      
+    # აყენებს Docker Buildx-ს, რომელიც არის Docker-ის გაფართოებული build სისტემა
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # ახდენს რეპოზიტორიის checkout-ს (გადმოწერას), რათა წვდომა ჰქონდეს კოდთან
+    - name: Checkout repository
+      uses:  actions/checkout@v4
+
+    # ეს ნაბიჯი მეორდება (შეცდომით) - იგივე რაც ზემოთ, კვლავ აყენებს QEMU-ს
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      
+    # ეს ნაბიჯიც მეორდება (შეცდომით) - იგივე რაც ზემოთ, კვლავ აყენებს Docker Buildx-ს
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # დაკომენტარებული ნაწილი backend-ის ბილდისთვის - ამჟამად არ გამოიყენება
+    # - name: Build backend
+    #   run: |
+    #     cd backend
+    #     docker build . -t backend-${{ env.DOCKER_IMAGE }} --platform linux/amd64
+
+    # აშენებს frontend იმიჯს მიმდინარე დირექტორიაში Dockerfile-ის გამოყენებით
+    # იმიჯი იქმნება linux/amd64 პლატფორმისთვის
+    - name: Build frontend
+      run: |
+        docker build . -t frontend-${{ env.DOCKER_IMAGE }} --platform linux/amd64
+
+    # დაკომენტარებული ნაწილი backend იმიჯის შესანახად - ამჟამად არ გამოიყენება
+    # - name: Save Docker Image backend
+    #   run: |
+    #     docker save --output backend-${{ env.DOCKER_IMAGE_TAR }} backend-${{ env.DOCKER_IMAGE }} 
+    #     chmod 664 backend-${{ env.DOCKER_IMAGE_TAR }}
+
+    # ინახავს frontend იმიჯს tar ფაილში და აძლევს შესაბამის წვდომის უფლებებს
+    - name: Save Docker Image frontend
+      run: |
+        docker save --output frontend-${{ env.DOCKER_IMAGE_TAR }} frontend-${{ env.DOCKER_IMAGE }} 
+        chmod 664 frontend-${{ env.DOCKER_IMAGE_TAR }}
+
+    # დაკომენტარებული ნაწილი backend იმიჯის გასაგზავნად - ამჟამად არ გამოიყენება
+    # - name: Copy Docker image(backend) to host
+    #   uses: appleboy/scp-action@v0.1.7
+    #   with:
+    #     host: ${{ secrets.HOST }}
+    #     username: ${{ secrets.USER }}
+    #     key: ${{ secrets.KEY }}
+    #     port: ${{ secrets.PORT }}
+    #     source: "backend-${{ env.DOCKER_IMAGE_TAR }}"
+    #     target: "backend-${{ env.DOCKER_IMAGE_TAR }}"
+
+    # გზავნის frontend იმიჯს (tar ფაილს) სერვერზე scp პროტოკოლის გამოყენებით
+    - name: Copy Docker image to host
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}        # სერვერის IP/ჰოსტი (საიდუმლო ცვლადი)
+        username: ${{ secrets.USER }}     # მომხმარებლის სახელი სერვერზე (საიდუმლო ცვლადი)
+        key: ${{ secrets.KEY }}          # SSH გასაღები ავტორიზაციისთვის (საიდუმლო ცვლადი)
+        port: ${{ secrets.PORT }}        # SSH პორტი (საიდუმლო ცვლადი)
+        source: "frontend-${{ env.DOCKER_IMAGE_TAR }}"  # წყარო ფაილი
+        target: "frontend-${{ env.DOCKER_IMAGE_TAR }}"  # სამიზნე ადგილი სერვერზე
+        
+    # სერვერზე ტვირთავს Docker იმიჯს tar ფაილიდან
+    - name: Load Docker Image
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: | 
+          docker load -i frontend-${{ env.DOCKER_IMAGE_TAR }}/frontend-${{ env.DOCKER_IMAGE_TAR }}
+    
+    # ანახლებს docker-compose.yml ფაილს სერვერზე, რათა გამოიყენოს ახალი იმიჯი
+    - name: Update Docker Compose 
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: | 
+          yq w -i dosh/docker-compose.yml 'services.frontend-${{ github.ref_name }}.image' 'frontend-${{ github.ref_name }}:${{ github.sha }}'
+    
+    # გადატვირთავს სერვისს docker-compose ფაილის განახლების შემდეგ
+    - name: Recreate images
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: | 
+          cd dosh
+          docker rollout frontend-${{ github.ref_name }}
+          
+    # წმენდს ძველ გამოუყენებელ Docker იმიჯებს სერვერზე, რათა დაზოგოს დისკის სივრცე
+    - name: Clean up old images
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: | 
+          docker image prune -a -f  # წაშლის ყველა გამოუყენებელ იმიჯს კონფირმაციის გარეშე
+
+
+
+
+
+
+

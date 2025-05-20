@@ -9,9 +9,11 @@ const App: React.FC = () => {
                 <h1>დ   ო   შ</h1>
             </nav>
             <div className="content">
-                <a className="link" href="https://dashni.dosh.ge" target="_blank" rel="noopener noreferrer">
-                    <div className="feature">დ ა შ ნ ი</div>
-                </a>
+                <div className="project-button">
+                    <a className="link" href="https://dashni.dosh.ge" target="_blank" rel="noopener noreferrer">
+                        <div className="feature">დ ა შ ნ ი</div>
+                    </a>
+                </div>
             </div>
             <footer className="footer">
                 {/* <p>Footer Content</p> */}
